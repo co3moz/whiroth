@@ -82,6 +82,7 @@ Operators
 |     d    | Bring value to front of stack |    1    |
 |     !    |              not              |    1    |
 |     ~    |          bitwise not          |    1    |
+|     r    |         reverse stack         |    1    |
 
 Routine calls
 -----------------------
