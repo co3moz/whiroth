@@ -135,11 +135,18 @@ so basically with parenthesis we can do both loops and branch.
 Example complex calculations
 ---------------------
 
-### 1
+### 1 Random generation
 Generate a thousand random values into stack. Add all of them into one value. Divide it by a thousand and find average random value.
 
 ```
 1000 :: ([=#random]) d -- (+) d /
 ```
 
+result: ~ 0.5
 
+### 2 15nth fibonacci number
+```
+1 1 15 2 - ( r u : d + uu ) d @
+```
+
+result: 610 ( 1 1 **15** .. this 15 can be changed what ever you like )

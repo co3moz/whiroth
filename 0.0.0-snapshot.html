@@ -1,0 +1,108 @@
+<textarea id="yo" style="width: 48%; height: 100%">
+
+</textarea>
+
+<textarea id="yes" style="width: 48%; height: 100%">
+
+</textarea>
+
+<script>
+function remove(i) {
+	return void(0);
+}
+
+function forPrepare(what) {
+	var result = what.replace(/\(([^\(\)]+)\)/g, function(a, c) {
+		return "\"" + btoa(c) + "\"";
+	});
+	
+	if (what != result) {
+		return forPrepare(result);
+	} 
+	return result;
+}
+
+function resolveFor(what) {
+	return what.replace(/"([^"]*)"/g, function(a, c) {
+		return "(" + atob(c) + ")";
+	});
+}
+
+function calculate(what, stack) {
+	(stack || (stack = []));
+	try {
+	what = resolveFor(forPrepare(what));
+	what.replace(/(\d+(?:\.\d+)?)|(\+\+|\+|--|-|\*|\/|\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|\@|u|d|r)|(?:\((.*?)\))|(?:\[(=)?([^\]]+?)\])|(?:\{([^}]+?)\})/g, function(a, n, op, frd, isParamSafe, ssop, smop) {
+	  if(op) {
+		if(op == ':') {
+			var k = stack.pop();
+			stack.push(k);
+			stack.push(k);
+		} else if(op == '@') {
+			stack.pop();
+		} else if(op == 'd') {
+			stack.push(stack.shift());
+		} else if(op == 'u') {
+			stack.unshift(stack.pop())
+		} else if(op == 'r') {
+			stack.reverse();
+		} else if(op == '++') {
+			var k = stack.pop() + 1;
+			stack.push(k);
+		} else if(op == '--') {
+			var k = stack.pop() - 1;
+			stack.push(k);
+		} else if(op == '!') {
+			var k = !stack.pop();
+			stack.push(k);
+		} else if(op == '~') {
+			var k = ~stack.pop();
+			stack.push(k);
+		} else {
+			var b = stack.pop();
+			var a = stack.pop();
+			stack.push(eval("a " + op + " b"));
+		}
+	  } else if(ssop) {
+		if(ssop.indexOf('#') == 0) ssop = "Math." + ssop.substring(1);
+		
+		if(!isParamSafe) {
+			var k = stack.pop();
+			var r = eval(ssop + "(" + k + ")");
+			if(r != void(0)) stack.push(+r);
+		} else {
+			var r = eval(ssop)();
+			if(r != void(0)) stack.push(+r);
+		}
+	  } else if(smop) {
+		if(smop.indexOf('#') == 0) smop = "Math." + smop.substring(1);
+		
+		var b = stack.pop();
+		var a = stack.pop();
+		var r = eval(smop + "(" + a + "," + b + ")");
+		if(r != void(0)) stack.push(+r);
+	  } else if(frd) {
+		for(var i = stack.pop(); i  > 0; i--) {
+			var result = calculate(frd, stack);
+			if (result != void(0)) stack.push(result);
+		}
+	  } else {
+		stack.push(+n);
+	  }
+	  return "";
+	});
+	} catch(e) {
+		return "error:" + e.message;
+	}
+	return stack.pop()
+}
+var yo = document.getElementById("yo");
+var yes = document.getElementById("yes");
+yo.onkeyup = function(e) {
+	var stack = [];
+	var result = calculate(yo.value, stack);
+	stack.push(result);
+	yes.value = result + '\n\n\n' + JSON.stringify(stack, 4, '\t');
+	
+}
+</script>
