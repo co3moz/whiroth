@@ -1,0 +1,12 @@
+{
+  "name": "whiroth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "whiroth.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["What", "is", "wrong", "with", "me", "language", "math", "postfix"],
+  "author": "co3moz",
+  "license": "MIT"
+}
