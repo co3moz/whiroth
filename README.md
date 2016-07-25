@@ -264,16 +264,9 @@ fibonacci(1) = 1
 ```
 set <prime, 2011>
 
-#prime  (
-  init i / : [#floor] - 0 ==
-)
-
+#prime  ( init i / : [#floor] - 0 == )
 #prime -- (+) 2 - 0 ==
-: (
-  "prime" (pc)
-) ! (
-  "not prime" (pc)
-)
+: set<if> ( "prime" ) #if ! ( "not prime" ) (pc) clear<if>
 
 clear <prime>
 ```
