@@ -58,31 +58,38 @@ result: 1
 Operators
 --------------------
 
-| Operator |              Job              |  Stack  |
-|:--------:|:-----------------------------:|:-------:|
-|     +    |            Addition           |    2    |
-|     -    |          Subtraction          |    2    |
-|     *    |         Multiplication        |    2    |
-|     /    |            Division           |    2    |
-|    ++    |            Increase           |    1    |
-|    --    |            Decrease           |    1    |
-|     ^    |          Bitwise xor          |    2    |
-|     %    |           Modulation          |    2    |
-|    <<    |           Shift left          |    2    |
-|    >>    |          Shift right          |    2    |
-|     >    |           Is bigger           |    2    |
-|    >=    |       Is bigger or equal      |    2    |
-|     <    |           Is smaller          |    2    |
-|    <=    |      Is smaller or equal      |    2    |
-|    ==    |            Is equal           |    2    |
-|    !=    |          Is not equal         |    2    |
-|     :    |        Duplicate value        |    1    |
-|     @    |    Remove value from stack    |    1    |
-|     u    |  Bring value to end of stack  |    1    |
-|     d    | Bring value to front of stack |    1    |
-|     !    |              not              |    1    |
-|     ~    |          bitwise not          |    1    |
-|     r    |         reverse stack         |    1    |
+| Operator |              Job              |         Stack           |
+|:--------:|:-----------------------------:|:-----------------------:|
+|     +    |            Addition           |     remove(2) add(1)    |
+|     -    |          Subtraction          |     remove(2) add(1)    |
+|     *    |         Multiplication        |     remove(2) add(1)    |
+|     /    |            Division           |     remove(2) add(1)    |
+|    ++    |            Increase           |         modify(1)       |
+|    --    |            Decrease           |         modify(1)       |
+|     ^    |          Bitwise xor          |     remove(2) add(1)    |
+|     %    |           Modulation          |     remove(2) add(1)    |
+|    <<    |           Shift left          |     remove(2) add(1)    |
+|    >>    |          Shift right          |     remove(2) add(1)    |
+|     >    |           Is bigger           |     remove(2) add(1)    |
+|    >=    |       Is bigger or equal      |     remove(2) add(1)    |
+|     <    |           Is smaller          |     remove(2) add(1)    |
+|    <=    |      Is smaller or equal      |     remove(2) add(1)    |
+|    ==    |            Is equal           |     remove(2) add(1)    |
+|    !=    |          Is not equal         |     remove(2) add(1)    |
+|     :    |        Duplicate value        |          add(1)         |
+|     @    |    Remove value from stack    |         remove(1)       |
+|     u    |  Bring value to end of stack  |      remove(1) add(1)   |
+|     d    | Bring value to front of stack |      remove(1) add(1)   |
+|     !    |              not              |         modify(1)       |
+|     ~    |          bitwise not          |         modify(1)       |
+|     r    |         reverse stack         |         modify(all)     |
+|   iter   |  for current iteration value  |         add(1)          |
+|    i     |         alias of iter         |         add(1)          |
+|   init   |    for initialization value   |         add(1)          |
+|   break  |           breaks for          |                         |
+| continue |         continues for         |                         |
+|    pc    |          prints char          |         remove(1)       |
+|    pv    |          prints value         |         remove(1)       |
 
 Routine calls
 -----------------------
@@ -108,6 +115,16 @@ result: 10
 
 result: 10 (but your previous 10 and 12 values still waiting)
 
+Comments
+--------------
+
+you can use `;` character for comments.
+
+example:
+```
+10 20 + ; 30
+````
+
 Conditional Routines
 --------------------
 
@@ -131,6 +148,60 @@ result: 20 (but there is 10 different value "20")
 
 so basically with parenthesis we can do both loops and branch.
 
+Heap zone
+--------------------
+
+You can still use heap zone. Simply pop's from stack and set value to wanted variable.
+
+syntax:
+```
+10 set<val>
+
+set<val, 10>  ; exacly same as 10 set<val>
+
+#val
+```
+
+example:
+```
+set<a, 10>  ; a = 10
+#a set<b>   ; b = a
+#a #b == (  ; a == b
+  true
+)
+```
+
+Output
+------------------
+
+Whiroth has stdout too but routines won't return output. you have to fetch it from object.
+
+```javascript
+var stack = [];
+var opts = {};
+var result = whiroth(text, stack, opts);
+console.log(opts.out);
+```
+
+How can i use output? easy
+```
+"Hello world!" ; basically writes hello world! text reverse and puts length too
+( ; there is length and for each length
+  pc ; put char to output
+)
+```
+If you want to put value use `pv`
+
+example:
+```
+set<a, 10>
+set<b, 20>
+
+#a pv " + " (pc) #b pv " = " (pc) #a #b + pv
+```
+
+result: `10 + 20 = 30`
+
 
 Example complex calculations
 ---------------------
@@ -144,9 +215,66 @@ Generate a thousand random values into stack. Add all of them into one value. Di
 
 result: ~ 0.5
 
-### 2 15nth fibonacci number
+### 2 Fibonacci number 15
 ```
 1 1 15 2 - ( r u : d + uu ) d @
 ```
 
 result: 610 ( 1 1 **15** .. this 15 can be changed what ever you like )
+
+
+### 3 Fibonacci number (all)
+```
+20 (
+    "fibonacci(" (pc) i pv ") = " (pc)
+    1 1 i 2 -
+    (
+        r u : d + uu
+    )
+
+    d @ pv 13 pc
+)
+```
+
+result:
+```
+fibonacci(20) = 6765
+fibonacci(19) = 4181
+fibonacci(18) = 2584
+fibonacci(17) = 1597
+fibonacci(16) = 987
+fibonacci(15) = 610
+fibonacci(14) = 377
+fibonacci(13) = 233
+fibonacci(12) = 144
+fibonacci(11) = 89
+fibonacci(10) = 55
+fibonacci(9) = 34
+fibonacci(8) = 21
+fibonacci(7) = 13
+fibonacci(6) = 8
+fibonacci(5) = 5
+fibonacci(4) = 3
+fibonacci(3) = 2
+fibonacci(2) = 1
+fibonacci(1) = 1
+```
+
+### 4 Prime finder
+```
+set <prime, 2011>
+
+#prime  (
+  init i / set<ratio> #ratio [#floor] #ratio  - 0 ==
+)
+
+#prime -- (+) 2 - 0 ==
+: (
+  "prime" (pc)
+) ! (
+  "not prime" (pc)
+)
+
+clear <ratio>
+clear <prime>
+```

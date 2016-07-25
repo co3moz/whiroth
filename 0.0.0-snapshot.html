@@ -7,102 +7,155 @@
 </textarea>
 
 <script>
-function remove(i) {
-	return void(0);
-}
-
-function forPrepare(what) {
-	var result = what.replace(/\(([^\(\)]+)\)/g, function(a, c) {
-		return "\"" + btoa(c) + "\"";
-	});
-	
-	if (what != result) {
-		return forPrepare(result);
-	} 
-	return result;
-}
-
-function resolveFor(what) {
-	return what.replace(/"([^"]*)"/g, function(a, c) {
-		return "(" + atob(c) + ")";
-	});
-}
-
-function calculate(what, stack) {
-	(stack || (stack = []));
-	try {
-	what = resolveFor(forPrepare(what));
-	what.replace(/(\d+(?:\.\d+)?)|(\+\+|\+|--|-|\*|\/|\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|\@|u|d|r)|(?:\((.*?)\))|(?:\[(=)?([^\]]+?)\])|(?:\{([^}]+?)\})/g, function(a, n, op, frd, isParamSafe, ssop, smop) {
-	  if(op) {
-		if(op == ':') {
-			var k = stack.pop();
-			stack.push(k);
-			stack.push(k);
-		} else if(op == '@') {
-			stack.pop();
-		} else if(op == 'd') {
-			stack.push(stack.shift());
-		} else if(op == 'u') {
-			stack.unshift(stack.pop())
-		} else if(op == 'r') {
-			stack.reverse();
-		} else if(op == '++') {
-			var k = stack.pop() + 1;
-			stack.push(k);
-		} else if(op == '--') {
-			var k = stack.pop() - 1;
-			stack.push(k);
-		} else if(op == '!') {
-			var k = !stack.pop();
-			stack.push(k);
-		} else if(op == '~') {
-			var k = ~stack.pop();
-			stack.push(k);
-		} else {
-			var b = stack.pop();
-			var a = stack.pop();
-			stack.push(eval("a " + op + " b"));
-		}
-	  } else if(ssop) {
-		if(ssop.indexOf('#') == 0) ssop = "Math." + ssop.substring(1);
-		
-		if(!isParamSafe) {
-			var k = stack.pop();
-			var r = eval(ssop + "(" + k + ")");
-			if(r != void(0)) stack.push(+r);
-		} else {
-			var r = eval(ssop)();
-			if(r != void(0)) stack.push(+r);
-		}
-	  } else if(smop) {
-		if(smop.indexOf('#') == 0) smop = "Math." + smop.substring(1);
-		
-		var b = stack.pop();
-		var a = stack.pop();
-		var r = eval(smop + "(" + a + "," + b + ")");
-		if(r != void(0)) stack.push(+r);
-	  } else if(frd) {
-		for(var i = stack.pop(); i  > 0; i--) {
-			var result = calculate(frd, stack);
-			if (result != void(0)) stack.push(result);
-		}
-	  } else {
-		stack.push(+n);
-	  }
-	  return "";
-	});
-	} catch(e) {
-		return "error:" + e.message;
+	function remove(i) {
+		return void(0);
 	}
-	return stack.pop()
-}
-var yo = document.getElementById("yo");
-var yes = document.getElementById("yes");
-yo.onkeyup = function(e) {
-	var stack = [];
-	var result = calculate(yo.value, stack);
-	stack.push(result);
-	yes.value = result + '\n\n\n' + JSON.stringify(stack, 4, '\t');
-	
-}
+
+	function forPrepare(what) {
+		var result = what.replace(/;(.*)(\r\n|\n\r|\n|\r|$)/g, '\n').replace(/'(.)'/g, function(a, r) { return r.charCodeAt(0);}).replace(/"(thisisageneratedtext)?([^"]*)"/g, function(a, isGenerated, c) {
+			if(!isGenerated) {
+				return ' ' + c.split("").map(function(t) { return t.charCodeAt(0); }).reverse().join(' ') + ' ' + c.length + '  ';
+			}
+			return a;
+		}).replace(/\r\n|\n\r|\r|\n/g, " ").replace(/\(([^\(\)]+)\)/g, function(a, c) {
+			return "\"thisisageneratedtext" + btoa(encodeURIComponent(c)) + "\"";
+		});
+
+		if (what != result) {
+			return forPrepare(result);
+		}
+		return result;
+	}
+
+	function resolveFor(what) {
+		return what.replace(/"(thisisageneratedtext)?([^"]*)"/g, function(a, isGenerated, c) {
+			if(isGenerated) {
+				return "(" + decodeURIComponent(atob(c)) + ")";
+			} else {
+				return ' ' + c.split("").map(function(t) { return t.charCodeAt(0); }).reverse().join(' ') + ' ' + c.length + '  ';
+			}
+		});
+	}
+
+	function calculate(what, stack, obj) {
+		(stack || (stack = []));
+		(obj || (obj = {}));
+
+		if(obj.values ==  null) {
+			obj.values = {};
+		}
+
+		try {
+			what = resolveFor(forPrepare(what));
+			what.replace(/(\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|\@|u|d|r)|(?:\((.*?)\))|(?:\[(=)?([^\]]+?)\])|(?:\{([^}]+?)\})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)/g, function(a, n, bool, specialOps, def, op, frd, isParamSafe, ssop, smop, set, setv, clear) {
+				if(obj.break == true) return a;
+				if(obj.continue == true) return a;
+
+				if(op) {
+					if(op == ':') {
+						var k = stack.pop();
+						stack.push(k);
+						stack.push(k);
+					} else if(op == '@') {
+						stack.pop();
+					} else if(op == 'd') {
+						stack.push(stack.shift());
+					} else if(op == 'u') {
+						stack.unshift(stack.pop())
+					} else if(op == 'r') {
+						stack.reverse();
+					} else if(op == '++') {
+						var k = stack.pop() + 1;
+						stack.push(k);
+					} else if(op == '--') {
+						var k = stack.pop() - 1;
+						stack.push(k);
+					} else if(op == '!') {
+						var k = !stack.pop();
+						stack.push(k);
+					} else if(op == '~') {
+						var k = ~stack.pop();
+						stack.push(k);
+					} else {
+						var b = stack.pop();
+						var a = stack.pop();
+						stack.push(eval("a " + op + " b"));
+					}
+				} else if(bool) {
+					stack.push(bool == "true");
+				} else if(def) {
+					stack.push(obj.values[def]);
+				} else if(specialOps) {
+					if(specialOps == 'iter' || specialOps == 'i') stack.push(obj.iteration);
+					else if(specialOps == 'init') stack.push(obj.initialize);
+					else if(specialOps == 'break') obj.break = true;
+					else if(specialOps == 'continue') obj.continue = true;
+					else if(specialOps == 'pc') obj.out = (obj.out || "") + String.fromCharCode(stack.pop());
+					else if(specialOps == 'pv') obj.out = (obj.out || "") + (stack.pop());
+				} else if(ssop) {
+					if(ssop.indexOf('#') == 0) ssop = "Math." + ssop.substring(1);
+
+					if(!isParamSafe) {
+						var k = stack.pop();
+						var r = eval(ssop + "(" + k + ")");
+						if(r != void(0)) stack.push(+r);
+					} else {
+						try {
+							var r = eval(ssop)();
+							if(r != void(0)) stack.push(+r);
+						} catch(e) {
+							var r = eval(ssop);
+							if(r != void(0)) stack.push(+r);
+						}
+					}
+				} else if(smop) {
+					if(smop.indexOf('#') == 0) smop = "Math." + smop.substring(1);
+
+					var b = stack.pop();
+					var a = stack.pop();
+					var r = eval(smop + "(" + a + "," + b + ")");
+					if(r != void(0)) stack.push(+r);
+				} else if(frd) {
+					var ops = {initialize: stack.pop(), values: obj.values, protector: Date.now() + (obj.values.limit || 500)};
+					for(var i = ops.initialize; i  > 0; i--) {
+						ops.iteration = i;
+						var result = calculate(frd, stack, ops);
+						if (result != void(0)) stack.push(result);
+
+						if(ops.break) break;
+						ops.continue = false;
+
+						if(ops.protector < Date.now()) break;
+					}
+					if(ops.out) {
+						obj.out = (obj.out || "") + ops.out;
+					}
+				} else if(set) {
+					if(setv) {
+						obj.values[set] = +setv;
+					} else {
+						obj.values[set] = stack.pop();
+					}
+				} else if(clear) {
+					delete obj.values[clear];
+				} else {
+					stack.push(+n);
+				}
+				return "";
+			});
+		} catch(e) {
+			return "error:" + e.message;
+		}
+		return stack.pop()
+	}
+	var yo = document.getElementById("yo");
+	var yes = document.getElementById("yes");
+	yo.onkeyup = function(e) {
+		var stack = [];
+		var obj = {};
+		var result = calculate(yo.value, stack, obj);
+		if(result != undefined) stack.push(result);
+		yes.value = (obj.out || result) + (stack.length != 0 ? ('\n\n' + JSON.stringify(stack, 4, '\t')) : '') + (Object.keys(obj.values) != 0? ('\n\n' + JSON.stringify(obj.values, 4, '\t')) : '' );
+
+	}
 </script>
