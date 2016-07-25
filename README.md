@@ -265,7 +265,7 @@ fibonacci(1) = 1
 set <prime, 2011>
 
 #prime  (
-  init i / set<ratio> #ratio [#floor] #ratio  - 0 ==
+  init i / : [#floor] - 0 ==
 )
 
 #prime -- (+) 2 - 0 ==
@@ -275,6 +275,5 @@ set <prime, 2011>
   "not prime" (pc)
 )
 
-clear <ratio>
 clear <prime>
 ```
