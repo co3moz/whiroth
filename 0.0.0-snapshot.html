@@ -181,25 +181,27 @@
                         }
                     } else if (frm == 'if') {
                         ops = {
-                            initialize: stack.pop(),
+                            initialize: obj.initialize,
                             values: obj.values,
                             subRoutines: obj.subRoutines
                         };
-                        if (ops.initialize) {
+                        var k = stack.pop();
+                        if (k) {
                             result = calculate(frd, stack, ops);
                             if (result != void(0)) stack.push(result);
 
                             if (ops.break) obj.break = true;
                             if (ops.continue) obj.continue = true;
                         }
-                        stack.push(ops.initialize);
+                        stack.push(k);
                     } else if (frm == 'else') {
                         ops = {
-                            initialize: stack.pop(),
+                            initialize: obj.initialize,
                             values: obj.values,
                             subRoutines: obj.subRoutines
                         };
-                        if (!ops.initialize) {
+                        var k = stack.pop();
+                        if (!k) {
                             result = calculate(frd, stack, ops);
                             if (result != void(0)) stack.push(result);
 

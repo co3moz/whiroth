@@ -355,6 +355,7 @@ routine factorial (
 
 result: 720
 
+> **But remember!** routines won't work fast right know.
 
 Example complex calculations
 ---------------------
@@ -422,4 +423,23 @@ set <prime, 23>
 if ( "prime" ) else ( "not prime" ) (pc)
 
 clear <prime>
+```
+
+### 5 factorial without routines
+```
+1 6 (i *) ; legendary version of factorial but it needs 1 value before loop
+
+6 (i) 5 (*) ; simplest form of factorial. must change both 6 and 5 for numeric changes
+
+; we want dynamic value.. just change first and it should work
+
+6 (i : 1 == if(init)@) -- (*) ; no set no move. works always
+
+; or
+
+6 set<f> #f (i) #f -- (*) clear<f> ; uses set. but works always
+
+; or
+
+6 : (i) d -- (*) ; no set. works if stack was empty before calculations
 ```
