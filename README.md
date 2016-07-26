@@ -137,7 +137,9 @@ use parenthesis for logical things.
 ```
 
 result: 20 (because 10 == 10)
+
 stack:
+
 ```javascript
 [
     true,
@@ -175,7 +177,9 @@ You want to do some loops?
 ```
 
 result: 20
+
 stack:
+
 ```javascript
 [
     20,
@@ -184,6 +188,7 @@ stack:
 ```
 
 As you can see value 20 added twice into stack. Basically just parenthesis makes while loop. While loop has 2 alias more.
+
 ```
 2 (
     20
@@ -237,7 +242,7 @@ stack:
 ]
 ```
 
-> **Note:** `iter` has alias that named `i` you can use this too.  
+> **Note:** `iter` has alias that named `i` you can use this too.
 
 so basically with parenthesis we can do both loops and branch.
 
@@ -259,9 +264,9 @@ example:
 ```
 set<a, 10>  ; a = 10
 #a set<b>   ; b = a
-#a #b == (  ; a == b
-  true
-)
+#a #b == if (  ; a == b
+  "equal" (pc)
+) @
 ```
 
 Output
@@ -294,6 +299,61 @@ set<b, 20>
 ```
 
 result: `10 + 20 = 30`
+
+
+Routines
+--------------------
+
+You can create own routines with `routine name ( code )` syntax. And execute them with `call<name>`
+examples:
+
+```
+routine add (+)
+1 2 call<add>
+```
+
+result: 3
+
+```
+routine square (
+  : : *
+)
+
+5 call<square> call<square>
+```
+
+result: 625
+
+stack:
+
+```javascript
+[
+    5,
+    25,
+    625
+]
+```
+
+Self Calling Routines
+-----------------------
+
+There is no control between other routines and themselfs. So you can call anytime any where..
+
+Factorial routine example:
+
+```
+routine factorial (
+  : 1 == if (
+    1 *
+  ) else (
+    : -- call<factorial> *
+  )
+)
+
+6 call<factorial>
+```
+
+result: 720
 
 
 Example complex calculations
@@ -355,11 +415,11 @@ fibonacci(1) = 1
 
 ### 4 Prime finder
 ```
-set <prime, 2011>
+set <prime, 23>
 
 #prime  ( init i / : [#floor] - 0 == )
 #prime -- (+) 2 - 0 ==
-: set<if> ( "prime" ) #if ! ( "not prime" ) (pc) clear<if>
+if ( "prime" ) else ( "not prime" ) (pc)
 
 clear <prime>
 ```
