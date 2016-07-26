@@ -58,7 +58,7 @@
 
         try {
             what = resolveFor(forPrepare(what));
-            what.replace(/(-?\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(for|while|if|f|w|else|routine *\w+)? *(?:\((.*?)\))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)|(?:call *< *(\w+) *>)/g, function (all, n, bool, specialOps, def, frm, frd, op, isParamSafe, ssop, smop, set, setv, clear, call) {
+            what.replace(/(-?\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(for|while|if|f|w|else|routine *\w+ *#?)? *(?:\((.*?)\))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)|(?:(\w+) *< *>)/g, function (all, n, bool, specialOps, def, frm, frd, op, isParamSafe, ssop, smop, set, setv, clear, call) {
                 if (obj.break == true) return all;
                 if (obj.continue == true) return all;
                 var a, b, r;
@@ -130,11 +130,16 @@
                     if (!obj.subRoutines[call]) {
                         throw Error("unknown routine " + call);
                     }
-
-                    result = calculate(obj.subRoutines[call], stack, {
+                    var values = JSON.parse(JSON.stringify(obj.values));
+                    var ops = {
                         values: obj.values,
                         subRoutines: obj.subRoutines
-                    });
+                    };
+                    result = calculate(obj.subRoutines[call], stack, ops);
+                    obj.values = values;
+                    if (ops.out) {
+                        obj.out = (obj.out || "") + ops.out;
+                    }
                     if (result != void(0)) stack.push(result);
 
                 } else if (frd) {
@@ -209,8 +214,10 @@
                             if (ops.continue) obj.continue = true;
                         }
                     } else if (frm.indexOf('routine') == 0) {
-                        var name = /routine *(\w+) */.exec(frm)[1];
-                        if (obj.subRoutines[name]) {
+                        var reg = /routine *(\w+) *(#)?/.exec(frm);
+                        var name = reg[1];
+                        var ovr = reg[2];
+                        if (!ovr && obj.subRoutines[name]) {
                             throw Error("already defined " + frm);
                         }
                         obj.subRoutines[name] = frd;

@@ -357,6 +357,42 @@ result: 720
 
 > **But remember!** routines won't work fast right know.
 
+Self redefining routines and overriding
+----------------------------
+
+Normally you can't redefine a routine. it gives you an error, it thought that you are probably making mistake. But if you know what you are doing then, you can tell compiler that nothing is wrong just keep go..
+
+Use hashtag `#` after routine name.
+
+Let me show you a crazy infinite routine thing..
+
+```
+routine start (
+ routine crazy # (
+  routine crazy # (
+   routine crazy # (
+    routine crazy # (
+     "last" (pc) 13 pc
+     start <>
+    )
+    "third" (pc) 13 pc
+   )
+   "second" (pc) 13 pc
+  )
+  "first" (pc) 13 pc
+ )
+) start <>
+
+crazy<> ; first
+crazy<> ; second
+crazy<> ; third
+crazy<> ; last
+crazy<> ; first
+crazy<> ; second
+; ...
+```
+
+
 Example complex calculations
 ---------------------
 
