@@ -304,12 +304,12 @@ result: `10 + 20 = 30`
 Routines
 --------------------
 
-You can create own routines with `routine name ( code )` syntax. And execute them with `call<name>`
+You can create own routines with `routine name ( code )` syntax. And execute them with `name<>`
 examples:
 
 ```
 routine add (+)
-1 2 call<add>
+1 2 add<>
 ```
 
 result: 3
@@ -319,7 +319,7 @@ routine square (
   : : *
 )
 
-5 call<square> call<square>
+5 square<> square<>
 ```
 
 result: 625
@@ -346,11 +346,11 @@ routine factorial (
   : 1 == if (
     1 *
   ) else (
-    : -- call<factorial> *
+    : -- factorial<> *
   )
 )
 
-6 call<factorial>
+6 factorial<>
 ```
 
 result: 720
