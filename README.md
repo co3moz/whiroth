@@ -131,20 +131,113 @@ Conditional Routines
 use parenthesis for logical things.
 
 ```
-10 10 == (
+10 10 == if (
     20
 )
 ```
 
 result: 20 (because 10 == 10)
+stack:
+```javascript
+[
+    true,
+    20
+]
+```
+
+> **Note:** if statement puts read value back after complete. But else won't put back.
+> ```
+> 10 10 == if (
+>   ; stack is empty when execution is in here
+> ) ; if statement puts back value "true"
+> else (
+>   ; now you can do else too because data still there
+> ) ; but this time there is no "true"
+> ```
+> possible bugs
+> ```
+> 10 10 == if ( )
+> 10 20 +
+> ; ...
+> ; you forget to remove remaining data from if
+> ; you must do
+> 10 10 == if ( ) @
+> ```
+
+-------
+
+You want to do some loops?
 
 ```
-10 (
+2 (
     20
 )
 ```
 
-result: 20 (but there is 10 different value "20")
+result: 20
+stack:
+```javascript
+[
+    20,
+    20
+]
+```
+
+As you can see value 20 added twice into stack. Basically just parenthesis makes while loop. While loop has 2 alias more.
+```
+2 (
+    20
+)
+
+2 while (
+    20
+)
+
+2 w (
+    20
+)
+
+; all same
+```
+
+> **Note:** While and for loops are mostly same. Difference comes with iteration direction. While always go downwards. For always go upwards.
+
+You can use iter and init operators with while and for loops
+
+```
+5 while (
+    iter
+)
+```
+
+stack:
+```javascript
+[
+    5,
+    4,
+    3,
+    2,
+    1
+]
+```
+
+```
+5 for (
+    iter
+)
+```
+stack:
+```javascript
+[
+    1,
+    2,
+    3,
+    4,
+    5
+]
+```
+
+> **Note:** `iter` has alias that named `i` you can use this too.  
 
 so basically with parenthesis we can do both loops and branch.
 

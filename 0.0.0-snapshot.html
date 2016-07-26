@@ -1,3 +1,4 @@
+<!--suppress HtmlFormInputWithoutLabel, JSUnusedAssignment, JSCheckFunctionSignatures -->
 <textarea id="yo" style="width: 48%; height: 100%">
 
 </textarea>
@@ -7,7 +8,7 @@
 </textarea>
 
 <script>
-    function remove(i) {
+    function remove() {
         return void(0);
     }
 
@@ -53,15 +54,15 @@
 
         try {
             what = resolveFor(forPrepare(what));
-            what.replace(/(\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|\@|u|d|r)|(?:\((.*?)\))|(?:\[(=)?([^\]]+?)\])|(?:\{([^}]+?)\})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)/g, function (a, n, bool, specialOps, def, op, frd, isParamSafe, ssop, smop, set, setv, clear) {
-                if (obj.break == true) return a;
-                if (obj.continue == true) return a;
-
+            what.replace(/(\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(for|while|if|f|w|else)? *(?:\((.*?)\))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)/g, function (all, n, bool, specialOps, def, frm, frd, op, isParamSafe, ssop, smop, set, setv, clear) {
+                if (obj.break == true) return all;
+                if (obj.continue == true) return all;
+                var a, b, r;
                 if (op) {
                     if (op == ':') {
-                        var k = stack.pop();
-                        stack.push(k);
-                        stack.push(k);
+                        a = stack.pop();
+                        stack.push(a);
+                        stack.push(a);
                     } else if (op == '@') {
                         stack.pop();
                     } else if (op == 'd') {
@@ -71,20 +72,20 @@
                     } else if (op == 'r') {
                         stack.reverse();
                     } else if (op == '++') {
-                        var k = stack.pop() + 1;
-                        stack.push(k);
+                        a = stack.pop() + 1;
+                        stack.push(a);
                     } else if (op == '--') {
-                        var k = stack.pop() - 1;
-                        stack.push(k);
+                        a = stack.pop() - 1;
+                        stack.push(a);
                     } else if (op == '!') {
-                        var k = !stack.pop();
-                        stack.push(k);
+                        a = !stack.pop();
+                        stack.push(a);
                     } else if (op == '~') {
-                        var k = ~stack.pop();
-                        stack.push(k);
+                        a = ~stack.pop();
+                        stack.push(a);
                     } else {
-                        var b = stack.pop();
-                        var a = stack.pop();
+                        b = stack.pop();
+                        a = stack.pop();
                         stack.push(eval("a " + op + " b"));
                     }
                 } else if (bool) {
@@ -102,42 +103,89 @@
                     if (ssop.indexOf('#') == 0) ssop = "Math." + ssop.substring(1);
 
                     if (!isParamSafe) {
-                        var k = stack.pop();
-                        var r = eval(ssop + "(" + k + ")");
+                        a = stack.pop();
+                        r = eval(ssop + "(" + a + ")");
                         if (r != void(0)) stack.push(+r);
                     } else {
                         try {
-                            var r = eval(ssop)();
+                            r = eval(ssop)();
                             if (r != void(0)) stack.push(+r);
                         } catch (e) {
-                            var r = eval(ssop);
+                            r = eval(ssop);
                             if (r != void(0)) stack.push(+r);
                         }
                     }
                 } else if (smop) {
                     if (smop.indexOf('#') == 0) smop = "Math." + smop.substring(1);
 
-                    var b = stack.pop();
-                    var a = stack.pop();
-                    var r = eval(smop + "(" + a + "," + b + ")");
+                    b = stack.pop();
+                    a = stack.pop();
+                    r = eval(smop + "(" + a + "," + b + ")");
                     if (r != void(0)) stack.push(+r);
                 } else if (frd) {
-                    var ops = {
-                        initialize: stack.pop(),
-                        values: obj.values,
-                        protector: Date.now() + (obj.values.limit || 500)
-                    };
-                    for (var i = ops.initialize; i > 0; i--) {
-                        ops.iteration = i;
-                        var result = calculate(frd, stack, ops);
-                        if (result != void(0)) stack.push(result);
+                    var ops, i, result;
+                    if (frm == 'while' || frm == 'w' || frm == undefined) {
+                        ops = {
+                            initialize: stack.pop(),
+                            values: obj.values,
+                            protector: Date.now() + (obj.values['limit'] || 500)
+                        };
+                        for (i = ops.initialize; i > 0; i--) {
+                            ops.iteration = i;
+                            result = calculate(frd, stack, ops);
+                            if (result != void(0)) stack.push(result);
 
-                        if (ops.break) break;
-                        ops.continue = false;
+                            if (ops.break) break;
+                            ops.continue = false;
 
-                        if (ops.protector < Date.now()) {
-                            obj.timeout = true;
-                            break;
+                            if (ops.protector < Date.now()) {
+                                obj.timeout = true;
+                                break;
+                            }
+                        }
+                    } else if (frm == 'for' || frm == 'f') {
+                        ops = {
+                            initialize: stack.pop(),
+                            values: obj.values,
+                            protector: Date.now() + (obj.values['limit'] || 500)
+                        };
+                        for (i = 1; i <= ops.initialize; i++) {
+                            ops.iteration = i;
+                            result = calculate(frd, stack, ops);
+                            if (result != void(0)) stack.push(result);
+
+                            if (ops.break) break;
+                            ops.continue = false;
+
+                            if (ops.protector < Date.now()) {
+                                obj.timeout = true;
+                                break;
+                            }
+                        }
+                    } else if (frm == 'if') {
+                        ops = {
+                            initialize: stack.pop(),
+                            values: obj.values
+                        };
+                        if (ops.initialize) {
+                            result = calculate(frd, stack, ops);
+                            if (result != void(0)) stack.push(result);
+
+                            if (ops.break) obj.break = true;
+                            if (ops.continue) obj.continue = true;
+                        }
+                        stack.push(ops.initialize);
+                    } else if (frm == 'else') {
+                        ops = {
+                            initialize: stack.pop(),
+                            values: obj.values
+                        };
+                        if (!ops.initialize) {
+                            result = calculate(frd, stack, ops);
+                            if (result != void(0)) stack.push(result);
+
+                            if (ops.break) obj.break = true;
+                            if (ops.continue) obj.continue = true;
                         }
                     }
                     if (ops.out) {
