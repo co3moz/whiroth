@@ -8,11 +8,7 @@
 </textarea>
 
 <script>
-    function remove() {
-        return void(0);
-    }
-
-    function forPrepare(what) {
+    function forPrepare (what) {
         var result = what.replace(/;(.*)(\r\n|\n\r|\n|\r|$)/g, '\n').replace(/'(.)'/g, function (a, r) {
             return r.charCodeAt(0);
         }).replace(/"(thisisageneratedtext)?([^"]*)"/g, function (a, isGenerated, c) {
@@ -32,7 +28,7 @@
         return result;
     }
 
-    function resolveFor(what) {
+    function resolveFor (what) {
         return what.replace(/"(thisisageneratedtext)?([^"]*)"/g, function (a, isGenerated, c) {
             if (isGenerated) {
                 return "(" + decodeURIComponent(atob(c)) + ")";
@@ -44,7 +40,7 @@
         });
     }
 
-    function calculate(what, stack, obj) {
+    function calculate (what, stack, obj) {
         (stack || (stack = []));
         (obj || (obj = {}));
 
@@ -243,6 +239,157 @@
         }
         return stack.pop()
     }
+
+
+    function compile (what, obj) {
+        (obj || (obj = {}));
+
+        var compiled = "";
+        try {
+            what = resolveFor(forPrepare(what));
+            what.replace(/(-?\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(for|while|if|f|w|else|routine *\w+ *#?)? *(?:\((.*?)\))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)|(?:(\w+) *< *>)|[ \t\n\r]+|(.)/g, function (all, n, bool, specialOps, def, frm, frd, op, isParamSafe, ssop, smop, set, setv, clear, call, other) {
+                if (op) {
+                    if (op == ':') {
+                        compiled += ";__a=__s.pop();";
+                        compiled += "__s.push(__a);";
+                        compiled += "__s.push(__a);";
+                    } else if (op == '@') {
+                        compiled += "__s.pop();"
+                    } else if (op == 'd') {
+                        compiled += "__s.push(__s.shift());"
+                    } else if (op == 'u') {
+                        compiled += "__s.unshift(__s.pop());"
+                    } else if (op == 'r') {
+                        compiled += "__s.reverse();"
+                    } else if (op == '++') {
+                        compiled += ";__a=__s.pop()+1;";
+                        compiled += "__s.push(__a);";
+                    } else if (op == '--') {
+                        compiled += ";__a=__s.pop()-1;";
+                        compiled += "__s.push(__a);";
+                    } else if (op == '!') {
+                        compiled += ";__a=!__s.pop();";
+                        compiled += "__s.push(__a);";
+                    } else if (op == '~') {
+                        compiled += "__a = ~__s.pop();";
+                        compiled += "__s.push(__a);";
+                    } else {
+                        compiled += "__b=__s.pop();";
+                        compiled += "__a=__s.pop();";
+                        compiled += "__s.push(__a " + op + " __b);";
+                    }
+                } else if (bool) {
+                    compiled += '__s.push(' + (bool == "true") + ');';
+                } else if (def) {
+                    compiled += 'if(typeof ' + def + '!=="undefined")__s.push(' + def + ');';
+                } else if (specialOps) {
+                    if (specialOps == 'iter' || specialOps == 'i') compiled += '__s.push(__i' + obj.picked + ');';
+                    else if (specialOps == 'init') compiled += '__s.push(__m' + obj.picked + ');';
+                    else if (specialOps == 'break') compiled += 'break;';
+                    else if (specialOps == 'continue') compiled += 'continue;';
+                    else if (specialOps == 'pc') compiled += '__pc();';
+                    else if (specialOps == 'pv') compiled += '__pv();';
+                } else if (ssop) {
+                    if (ssop.indexOf('#') == 0) ssop = "Math." + ssop.substring(1);
+
+                    if (!isParamSafe) {
+                        compiled += '__a= __s.pop();';
+                        compiled += '__r=' + ssop + "(__a);";
+                        compiled += 'if(__r!=void(0)) __s.push(+__r);';
+                    } else {
+                        compiled += '__r=' + ssop + '();';
+                        compiled += 'if(__r!=void(0))__s.push(+__r);';
+                    }
+                } else if (smop) {
+                    if (smop.indexOf('#') == 0) smop = "Math." + smop.substring(1);
+
+                    compiled += '__b=__s.pop();';
+                    compiled += '__a=__s.pop();';
+                    compiled += '__r=' + smop + '(__a, __b)';
+                    compiled += 'if(__r!=void(0))__s.push(+__r);';
+                } else if (call) {
+                    compiled += '__ro["' + call + '"]' + '();';
+
+                } else if (frd) {
+                    var picked = obj.picked ? obj.picked + 1 : 1;
+                    if (frm == 'while' || frm == 'w' || frm == undefined) {
+                        compiled += '__i' + picked + '=__s.pop();';
+                        compiled += '__m' + picked + '=__i' + picked + ';';
+                        compiled += 'for(;__i' + picked + '>0;__i' + picked + '--){';
+                        compiled += compile(frd, {picked: picked});
+                        compiled += '};';
+                    } else if (frm == 'for' || frm == 'f') {
+                        compiled += '__i' + picked + '=1;';
+                        compiled += '__m' + picked + '=__s.pop();';
+                        compiled += 'for(;__i' + picked + '<=__m' + picked + ';__i' + picked + '++){';
+                        compiled += compile(frd, {picked: picked});
+                        compiled += '};';
+                    } else if (frm == 'if') {
+                        compiled += '__i' + picked + '=__s.pop();';
+                        compiled += '__m' + picked + '=__m' + (obj.picked ? obj.picked : 1) + ';';
+                        compiled += 'if(__i' + picked + ') {';
+                        compiled += compile(frd, {picked: picked});
+                        compiled += '};';
+                        compiled += '__s.push(__i' + picked + ');';
+                    } else if (frm == 'else') {
+                        compiled += '__i' + picked + '=__s.pop();';
+                        compiled += '__m' + picked + '=__m' + (obj.picked ? obj.picked : 1) + ';';
+                        compiled += 'if(!__i' + picked + '){';
+                        compiled += compile(frd, {picked: picked});
+                        compiled += '};';
+                    } else if (frm.indexOf('routine') == 0) {
+                        var reg = /routine *(\w+) *(#)?/.exec(frm);
+                        var name = reg[1];
+                        var ovr = reg[2];
+
+                        if (!ovr) {
+                            compiled += 'if(__ro["' + name + '"])throw Error("already defined routine ' + name + '");';
+                        }
+
+                        compiled += '__ro["' + name + '"]=function(){';
+                        compiled += compile(frd);
+                        compiled += '};';
+                    }
+                } else if (set) {
+                    if (setv) {
+                        compiled += 'var ' + set + '=' + (+setv) + ';';
+                    } else {
+                        compiled += 'var ' + set + '=__s.pop();'
+                    }
+                } else if (clear) {
+                    compiled += 'delete ' + clear + ';';
+                } else if (other) {
+                    throw Error("unexpected statement " + other);
+                } else if (n) {
+                    compiled += '__s.push(' + (+n) + ');';
+                }
+                return "";
+            });
+        } catch (e) {
+            throw Error("Compile error:" + e.message);
+        }
+
+        return compiled;
+    }
+
+    function compileWithHeader (what) {
+        return "(function(a) {var __s=[],__ro={},__out='',__a,__b,__r,__pc=(function(){__out+=String.fromCharCode(__s.pop())}),__pv=(function(){__out+=__s.pop()});if(a&&a.constructor==Array)__s.push.apply(__s, a);"
+                + keepReplaceUntilNoChange(compile(what), /__s\.(push|pop)\(([^)]+)\) *; *__s\.\1\(([^)]+)\)/g, function (a, op, s1, s2) {
+                    return '__s.' + op + '(' + s1 + ',' + s2 + ')'
+                })
+                + "return{out:__out,stack:__s};})";
+    }
+
+    function keepReplaceUntilNoChange (text, regex, fn) {
+        var last = text;
+        do {
+            last = text;
+            text = text.replace(regex, fn);
+        }
+        while (last != text);
+        return last;
+    }
+
     var yo = document.getElementById("yo");
     var yes = document.getElementById("yes");
 
@@ -252,5 +399,7 @@
         var result = calculate(yo.value, stack, obj);
         if (result != undefined) stack.push(result);
         yes.value = (obj.timeout ? "TIMEOUT!!!" : "") + (obj.out || result) + (stack.length != 0 ? ('\n\n' + JSON.stringify(stack, 4, '\t')) : '') + (Object.keys(obj.values) != 0 ? ('\n\n' + JSON.stringify(obj.values, 4, '\t')) : '' );
+        yes.value += '\n\nFaster Compiler version:\n' + compileWithHeader(yo.value);
+        yes.value += '\n' + JSON.stringify(eval(compileWithHeader(yo.value))(), 4, '\t');
     };
 </script>
