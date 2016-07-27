@@ -326,14 +326,14 @@
                         compiled += '};';
                     } else if (frm == 'if') {
                         compiled += '__i' + picked + '=__s.pop();';
-                        compiled += '__m' + picked + '=__m' + (obj.picked ? obj.picked : 1) + ';';
+                        compiled += '__m' + picked + (obj.picked > 1 ?  '=__m' + obj.picked :  '=__i1') + ';';
                         compiled += 'if(__i' + picked + ') {';
                         compiled += compile(frd, {picked: picked});
                         compiled += '};';
                         compiled += '__s.push(__i' + picked + ');';
                     } else if (frm == 'else') {
                         compiled += '__i' + picked + '=__s.pop();';
-                        compiled += '__m' + picked + '=__m' + (obj.picked ? obj.picked : 1) + ';';
+                        compiled += '__m' + picked  + (obj.picked > 1 ?  '=__m' + obj.picked :  '=__i1') + ';';
                         compiled += 'if(!__i' + picked + '){';
                         compiled += compile(frd, {picked: picked});
                         compiled += '};';
