@@ -1,5 +1,13 @@
 (function (whiroth) {
   if (typeof window == 'undefined') {
+    global.btoa = function (str) {
+      return (new Buffer(str.toString(), 'binary')).toString('base64');
+    };
+
+    global.atob = function (str) {
+      return new Buffer(str, 'base64').toString('binary');
+    };
+
     module.exports = whiroth; // node
   } else {
     window.whiroth = whiroth; // browser
@@ -104,7 +112,7 @@
 
           compiled += '__b=__s.pop();';
           compiled += '__a=__s.pop();';
-          compiled += '__r=' + smop + '(__a, __b)';
+          compiled += '__r=' + smop + '(__a, __b);';
           compiled += 'if(__r!=void(0))__s.push(+__r);';
         } else if (call) {
           compiled += '__ro["' + call + '"]' + '();';
@@ -125,7 +133,7 @@
             compiled += '};';
           } else if (frm == 'if') {
             compiled += '__i' + picked + '=__s.pop();';
-            compiled += '__m' + picked + (obj.picked > 1 ? '=__m' + obj.picked : '=__m1') + ';';
+            compiled += '__m' + picked + (obj.picked > 1 ? '=__m' + obj.picked : '=__i1') + ';';
             compiled += 'if(__i' + picked + ') {';
             compiled += compile(frd, {picked: picked});
             compiled += '};';
@@ -136,7 +144,7 @@
             } else {
               compiled += '__i' + picked + '=__s.pop();';
             }
-            compiled += '__m' + picked + (obj.picked > 1 ? '=__m' + obj.picked : '=__m1') + ';';
+            compiled += '__m' + picked + (obj.picked > 1 ? '=__m' + obj.picked : '=__i1') + ';';
             compiled += 'if(!__i' + picked + '){';
             compiled += compile(frd, {picked: picked});
             compiled += '};';

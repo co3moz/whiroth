@@ -4,7 +4,7 @@
   "description": "",
   "main": "whiroth.js",
   "scripts": {
-    "test": "mocha test/node.test.js"
+    "test": "mocha test/node.js"
   },
   "keywords": [
     "What",
