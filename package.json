@@ -4,9 +4,22 @@
   "description": "",
   "main": "whiroth.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha test/node.test.js"
   },
-  "keywords": ["What", "is", "wrong", "with", "me", "language", "math", "postfix"],
+  "keywords": [
+    "What",
+    "is",
+    "wrong",
+    "with",
+    "me",
+    "language",
+    "math",
+    "postfix"
+  ],
   "author": "co3moz",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3"
+  }
 }

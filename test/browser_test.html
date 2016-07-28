@@ -1,0 +1,31 @@
+<!--suppress HtmlFormInputWithoutLabel, JSUnusedAssignment, JSCheckFunctionSignatures -->
+<textarea id="inputTextArea" style="width: 48%; height: 100%">
+
+</textarea>
+
+<textarea id="outputTextArea" style="width: 48%; height: 100%">
+
+</textarea>
+
+<script src="../whiroth.js"></script>
+
+<script>
+    var inputTextArea = document.getElementById("inputTextArea");
+    var outputTextArea = document.getElementById("outputTextArea");
+
+    yo.onkeyup = function () {
+        try {
+            var compiled = whiroth(inputTextArea.value);
+            var executed = compiled.fn();
+
+            outputTextArea.value = 'result: ' + executed;
+            outputTextArea.value += '\nout: ' + executed.out;
+            outputTextArea.value += '\nstack: ' + executed.stack;
+            outputTextArea.value += '\nexecution time: ' + executed.executionTime;
+            outputTextArea.value += '\ncompile time: ' + compiled.compileTime;
+            outputTextArea.value += '\npure fn: ' + compiled.fnPure;
+        } catch (e) {
+            outputTextArea.value = e.message;
+        }
+    };
+</script>

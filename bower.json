@@ -1,0 +1,26 @@
+{
+  "name": "whiroth",
+  "description": "Whiroth expression language",
+  "main": "whiroth.js",
+  "authors": [
+    "co3moz"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "What",
+    "is",
+    "wrong",
+    "with",
+    "me",
+    "language",
+    "math",
+    "postfix"
+  ],
+  "homepage": "https://github.com/co3moz/whiroth",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test"
+  ]
+}

@@ -25,7 +25,7 @@ var result = compile.fn();
 console.log(result.out); // 3
 ```
 
-if you enjoy this in browser;
+if you want to enjoy this in browser;
 
 ```
 bower install whiroth --save
@@ -34,20 +34,20 @@ bower install whiroth --save
 ```javascript
 var myExpression = "1 2 + pv";
 var compile = whiroth(myExpression); // make sure you loaded whiroth.js before this code
-var result = compile.fn();
+var result = compile();
 console.log(result.out); // 3
 ```
 
 Basic Api
 ---------------
 
-Whiroth function compiles your expression then return an object that has this properties: "fn", "fnPure", "compileTime". Basically compileTime how much milliseconds passed during the compilation. fnPure is compiled string function with whiroth. fn is fnPure's real version that means unlike fnPure this one can be called. tl;dr fnPure is String, fn is Function
+Whiroth function compiles your expression then return an function that has this properties: "fn", "fnPure", "compileTime". Basically compileTime how much milliseconds passed during the compilation. fnPure is compiled string function with whiroth. fn is fnPure's real version that means unlike fnPure this one can be executed. **tl;dr** fnPure is String, fn is Function
 
 So you want to execute your expression, don't you. call fn with parenthesis. You can give an array to first parameter. Basically this will manipulates stack from beginning. For ex:
 
 ```javascript
 var compile = whiroth("+ pv");
-var result = compile.fn([4, 6]);
+var result = compile([4, 6]);
 console.log(result.out); // 10
 ```
 
@@ -100,6 +100,11 @@ you can use dot for rational numbers.
 
 result: 1
 
+> **Note:** If you ask how i can get this results to yourselfs;
+> ```javascript
+> console.log(whiroth("1 2 +")())
+> ```
+> Yeah fn returns an object but it's in superposition. It can also be a number.
 
 Operators
 --------------------
@@ -194,24 +199,6 @@ stack:
 ]
 ```
 
-> **Note:** if statement puts read value back after complete. But else won't put back.
-> ```
-> 10 10 == if (
->   ; stack is empty when execution is in here
-> ) ; if statement puts back value "true"
-> else (
->   ; now you can do else too because data still there
-> ) ; but this time there is no "true"
-> ```
-> possible bugs
-> ```
-> 10 10 == if ( )
-> 10 20 +
-> ; ...
-> ; you forget to remove remaining data from if
-> ; you must do
-> 10 10 == if ( ) @
-> ```
 
 -------
 
@@ -313,7 +300,7 @@ set<a, 10>  ; a = 10
 #a set<b>   ; b = a
 #a #b == if (  ; a == b
   "equal" (pc)
-) @
+)
 ```
 
 Output
@@ -514,7 +501,7 @@ clear <prime>
 
 ; we want dynamic value.. just change first and it should work
 
-6 (i : 1 == if(init)@) -- (*) ; no set no move. works always
+6 (i : 1 == if(init)) -- (*) ; no set no move. works always
 
 ; or
 
