@@ -182,8 +182,4 @@ describe('Whiroth', function () {
       should.equal(whiroth('set <prime, 24> #prime  ( init i / : [#floor] - 0 == ) #prime -- (+) 2 - 0 == if ( "prime" ) else ( "not prime" ) (pc)')().out.toString(), "not prime");
     });
   });
-
-
-
-
 });

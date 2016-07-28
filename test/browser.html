@@ -1,5 +1,19 @@
 <!--suppress HtmlFormInputWithoutLabel, JSUnusedAssignment, JSCheckFunctionSignatures -->
-<textarea id="inputTextArea" style="width: 48%; height: 100%">
+<head>
+    <style>
+        body {
+            background-color: black;
+            text-align: center;
+        }
+
+        textarea {
+            width: 49%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<textarea id="inputTextArea">
     5 (10 pc)
     "Hello World!" (pc) 10 pc
     "This is an awesome language (nope) whiroth" (pc) 10 pc
@@ -7,8 +21,8 @@
     5 (10 pc)
 </textarea>
 
-<textarea id="outputTextArea" style="width: 48%; height: 100%">
-
+<textarea id="outputTextArea">
+    
 </textarea>
 
 <script src="../whiroth.js"></script>
@@ -29,7 +43,7 @@
                 outputTextArea.value += '\nexecution time: ' + executed.executionTime;
                 outputTextArea.value += '\ncompile time: ' + compiled.compileTime;
                 outputTextArea.value += '\npure fn: ' + compiled.fnPure;
-            } catch(e) {
+            } catch (e) {
                 outputTextArea.value = 'Execution error! :' + e.message;
                 outputTextArea.value += '\ncompile time: ' + compiled.compileTime;
                 outputTextArea.value += '\npure fn: ' + compiled.fnPure;
@@ -41,3 +55,4 @@
 
     inputTextArea.onkeyup(); // trigger for start
 </script>
+</body>
