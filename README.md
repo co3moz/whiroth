@@ -1,6 +1,9 @@
 Whiroth
 ====================
 
+[![npm version](https://badge.fury.io/js/whiroth.svg)](https://badge.fury.io/js/whiroth)
+[![Dependency Status](https://david-dm.org/co3moz/whiroth.png)](https://david-dm.org/co3moz/whiroth)
+[![devDependency Status](https://david-dm.org/co3moz/whiroth/dev-status.svg)](https://david-dm.org/co3moz/whiroth#info=devDependencies)
 [![Build Status](https://travis-ci.org/co3moz/whiroth.svg?branch=master)](https://travis-ci.org/co3moz/whiroth)
 
 **Wh**at **i**s w**ro**ng wi**th** me? postfix expression evaluator
