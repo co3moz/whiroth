@@ -1,6 +1,8 @@
 Whiroth
 ====================
 
+[![Build Status](https://travis-ci.org/co3moz/whiroth.svg?branch=master)](https://travis-ci.org/co3moz/whiroth)
+
 **Wh**at **i**s w**ro**ng wi**th** me? postfix expression evaluator
 
 Why?
