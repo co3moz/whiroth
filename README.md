@@ -394,7 +394,7 @@ routine factorial (
 
 result: 720
 
-> **But remember!** ~~routines won't work fast right know.~~ was working slow..
+> **But remember!** ~~routines won't work fast right now.~~ was working slow..
 
 Self redefining routines and overriding
 ----------------------------
