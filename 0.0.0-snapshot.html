@@ -8,8 +8,8 @@
 </textarea>
 
 <script>
-    function forPrepare (what) {
-        var result = what.replace(/;(.*)(\r\n|\n\r|\n|\r|$)/g, '\n').replace(/'(.)'/g, function (a, r) {
+    function forPrepare(what) {
+        var result = what.replace(/'(.)'/g, function (a, r) {
             return r.charCodeAt(0);
         }).replace(/"(thisisageneratedtext)?([^"]*)"/g, function (a, isGenerated, c) {
             if (!isGenerated) {
@@ -18,7 +18,7 @@
                         }).reverse().join(' ') + ' ' + c.length + '  ';
             }
             return a;
-        }).replace(/\r\n|\n\r|\r|\n/g, " ").replace(/\(([^\(\)]*)\)/g, function (a, c) {
+        }).replace(/;(.*)(\r\n|\n\r|\n|\r|$)/g, '\n').replace(/\r\n|\n\r|\r|\n/g, " ").replace(/\(([^\(\)]*)\)/g, function (a, c) {
             return "\"thisisageneratedtext" + btoa(encodeURIComponent(c)) + "\"";
         });
 
@@ -28,7 +28,7 @@
         return result;
     }
 
-    function resolveFor (what) {
+    function resolveFor(what) {
         return what.replace(/"(thisisageneratedtext)?([^"]*)"/g, function (a, isGenerated, c) {
             if (isGenerated) {
                 return "(" + decodeURIComponent(atob(c)) + ")";
@@ -40,214 +40,13 @@
         });
     }
 
-    function calculate (what, stack, obj) {
-        (stack || (stack = []));
-        (obj || (obj = {}));
-
-        if (obj.values == null) {
-            obj.values = {};
-        }
-
-        if (obj.subRoutines == null) {
-            obj.subRoutines = {};
-        }
-
-        try {
-            what = resolveFor(forPrepare(what));
-            what.replace(/(-?\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(for|while|if|f|w|else|routine *\w+ *#?)? *(?:\((.*?)\))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)|(?:(\w+) *< *>)/g, function (all, n, bool, specialOps, def, frm, frd, op, isParamSafe, ssop, smop, set, setv, clear, call) {
-                if (obj.break == true) return all;
-                if (obj.continue == true) return all;
-                var a, b, r;
-                if (op) {
-                    if (op == ':') {
-                        a = stack.pop();
-                        stack.push(a);
-                        stack.push(a);
-                    } else if (op == '@') {
-                        stack.pop();
-                    } else if (op == 'd') {
-                        stack.push(stack.shift());
-                    } else if (op == 'u') {
-                        stack.unshift(stack.pop())
-                    } else if (op == 'r') {
-                        stack.reverse();
-                    } else if (op == '++') {
-                        a = stack.pop() + 1;
-                        stack.push(a);
-                    } else if (op == '--') {
-                        a = stack.pop() - 1;
-                        stack.push(a);
-                    } else if (op == '!') {
-                        a = !stack.pop();
-                        stack.push(a);
-                    } else if (op == '~') {
-                        a = ~stack.pop();
-                        stack.push(a);
-                    } else {
-                        b = stack.pop();
-                        a = stack.pop();
-                        stack.push(eval("a " + op + " b"));
-                    }
-                } else if (bool) {
-                    stack.push(bool == "true");
-                } else if (def) {
-                    stack.push(obj.values[def]);
-                } else if (specialOps) {
-                    if (specialOps == 'iter' || specialOps == 'i') stack.push(obj.iteration);
-                    else if (specialOps == 'init') stack.push(obj.initialize);
-                    else if (specialOps == 'break') obj.break = true;
-                    else if (specialOps == 'continue') obj.continue = true;
-                    else if (specialOps == 'pc') obj.out = (obj.out || "") + String.fromCharCode(stack.pop());
-                    else if (specialOps == 'pv') obj.out = (obj.out || "") + (stack.pop());
-                } else if (ssop) {
-                    if (ssop.indexOf('#') == 0) ssop = "Math." + ssop.substring(1);
-
-                    if (!isParamSafe) {
-                        a = stack.pop();
-                        r = eval(ssop + "(" + a + ")");
-                        if (r != void(0)) stack.push(+r);
-                    } else {
-                        try {
-                            r = eval(ssop)();
-                            if (r != void(0)) stack.push(+r);
-                        } catch (e) {
-                            r = eval(ssop);
-                            if (r != void(0)) stack.push(+r);
-                        }
-                    }
-                } else if (smop) {
-                    if (smop.indexOf('#') == 0) smop = "Math." + smop.substring(1);
-
-                    b = stack.pop();
-                    a = stack.pop();
-                    r = eval(smop + "(" + a + "," + b + ")");
-                    if (r != void(0)) stack.push(+r);
-                } else if (call) {
-                    if (!obj.subRoutines[call]) {
-                        throw Error("unknown routine " + call);
-                    }
-                    var values = JSON.parse(JSON.stringify(obj.values));
-                    var ops = {
-                        values: obj.values,
-                        subRoutines: obj.subRoutines
-                    };
-                    result = calculate(obj.subRoutines[call], stack, ops);
-                    obj.values = values;
-                    if (ops.out) {
-                        obj.out = (obj.out || "") + ops.out;
-                    }
-                    if (result != void(0)) stack.push(result);
-
-                } else if (frd) {
-                    var ops, i, result;
-                    if (frm == 'while' || frm == 'w' || frm == undefined) {
-                        ops = {
-                            initialize: stack.pop(),
-                            values: obj.values,
-                            protector: Date.now() + (obj.values['limit'] || 500),
-                            subRoutines: obj.subRoutines
-                        };
-                        for (i = ops.initialize; i > 0; i--) {
-                            ops.iteration = i;
-                            result = calculate(frd, stack, ops);
-                            if (result != void(0)) stack.push(result);
-
-                            if (ops.break) break;
-                            ops.continue = false;
-
-                            if (ops.protector < Date.now()) {
-                                obj.timeout = true;
-                                break;
-                            }
-                        }
-                    } else if (frm == 'for' || frm == 'f') {
-                        ops = {
-                            initialize: stack.pop(),
-                            values: obj.values,
-                            protector: Date.now() + (obj.values['limit'] || 500),
-                            subRoutines: obj.subRoutines
-                        };
-                        for (i = 1; i <= ops.initialize; i++) {
-                            ops.iteration = i;
-                            result = calculate(frd, stack, ops);
-                            if (result != void(0)) stack.push(result);
-
-                            if (ops.break) break;
-                            ops.continue = false;
-
-                            if (ops.protector < Date.now()) {
-                                obj.timeout = true;
-                                break;
-                            }
-                        }
-                    } else if (frm == 'if') {
-                        ops = {
-                            initialize: obj.initialize,
-                            values: obj.values,
-                            subRoutines: obj.subRoutines
-                        };
-                        var k = stack.pop();
-                        if (k) {
-                            result = calculate(frd, stack, ops);
-                            if (result != void(0)) stack.push(result);
-
-                            if (ops.break) obj.break = true;
-                            if (ops.continue) obj.continue = true;
-                        }
-                        stack.push(k);
-                    } else if (frm == 'else') {
-                        ops = {
-                            initialize: obj.initialize,
-                            values: obj.values,
-                            subRoutines: obj.subRoutines
-                        };
-                        var k = stack.pop();
-                        if (!k) {
-                            result = calculate(frd, stack, ops);
-                            if (result != void(0)) stack.push(result);
-
-                            if (ops.break) obj.break = true;
-                            if (ops.continue) obj.continue = true;
-                        }
-                    } else if (frm.indexOf('routine') == 0) {
-                        var reg = /routine *(\w+) *(#)?/.exec(frm);
-                        var name = reg[1];
-                        var ovr = reg[2];
-                        if (!ovr && obj.subRoutines[name]) {
-                            throw Error("already defined " + frm);
-                        }
-                        obj.subRoutines[name] = frd;
-                    }
-                    if (ops && ops.out) {
-                        obj.out = (obj.out || "") + ops.out;
-                    }
-                } else if (set) {
-                    if (setv) {
-                        obj.values[set] = +setv;
-                    } else {
-                        obj.values[set] = stack.pop();
-                    }
-                } else if (clear) {
-                    delete obj.values[clear];
-                } else {
-                    stack.push(+n);
-                }
-                return "";
-            });
-        } catch (e) {
-            return "error:" + e.message;
-        }
-        return stack.pop()
-    }
-
-
-    function compile (what, obj) {
+    function compile(what, obj) {
         (obj || (obj = {}));
 
         var compiled = "";
         try {
             what = resolveFor(forPrepare(what));
-            what.replace(/(-?\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(for|while|if|f|w|else|routine *\w+ *#?)? *(?:\((.*?)\))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)|(?:(\w+) *< *>)|[ \t\n\r]+|(.)/g, function (all, n, bool, specialOps, def, frm, frd, op, isParamSafe, ssop, smop, set, setv, clear, call, other) {
+            what.replace(/(-?\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(for|while|if|f|w|else|routine *\w+ *#?)? *(?:\((.*?)\))|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|swap|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)|(?:(\w+) *< *>)|[ \t\n\r]+|(.)/g, function (all, n, bool, specialOps, def, frm, frd, op, isParamSafe, ssop, smop, set, setv, clear, call, other) {
                 if (op) {
                     if (op == ':') {
                         compiled += ";__a=__s.pop();";
@@ -257,6 +56,11 @@
                         compiled += "__s.pop();"
                     } else if (op == 'd') {
                         compiled += "__s.push(__s.shift());"
+                    } else if (op == 'swap') {
+                        compiled += "__b=__s.pop();";
+                        compiled += "__a=__s.pop();";
+                        compiled += "__s.push(__b);";
+                        compiled += "__s.push(__a);";
                     } else if (op == 'u') {
                         compiled += "__s.unshift(__s.pop());"
                     } else if (op == 'r') {
@@ -326,14 +130,14 @@
                         compiled += '};';
                     } else if (frm == 'if') {
                         compiled += '__i' + picked + '=__s.pop();';
-                        compiled += '__m' + picked + (obj.picked > 1 ?  '=__m' + obj.picked :  '=__i1') + ';';
+                        compiled += '__m' + picked + (obj.picked > 1 ? '=__m' + obj.picked : '=__i1') + ';';
                         compiled += 'if(__i' + picked + ') {';
                         compiled += compile(frd, {picked: picked});
                         compiled += '};';
                         compiled += '__s.push(__i' + picked + ');';
                     } else if (frm == 'else') {
                         compiled += '__i' + picked + '=__s.pop();';
-                        compiled += '__m' + picked  + (obj.picked > 1 ?  '=__m' + obj.picked :  '=__i1') + ';';
+                        compiled += '__m' + picked + (obj.picked > 1 ? '=__m' + obj.picked : '=__i1') + ';';
                         compiled += 'if(!__i' + picked + '){';
                         compiled += compile(frd, {picked: picked});
                         compiled += '};';
@@ -372,15 +176,22 @@
         return compiled;
     }
 
-    function compileWithHeader (what) {
-        return "(function(a) {var __s=[],__ro={},__out='',__a,__b,__r,__pc=(function(){__out+=String.fromCharCode(__s.pop())}),__pv=(function(){__out+=__s.pop()});if(a&&a.constructor==Array)__s.push.apply(__s, a);"
+    function compileWithHeader(what) {
+        var start = Date.now();
+        var fn = "(function(a) {var __s=[],__ro={},__execution=Date.now(),__out='',__a,__b,__r,__pc=(function(){__out+=String.fromCharCode(__s.pop())}),__pv=(function(){__out+=__s.pop()});if(a&&a.constructor==Array)__s.push.apply(__s, a);"
                 + keepReplaceUntilNoChange(compile(what), /__s\.(push|pop)\(([^)]+)\) *; *__s\.\1\(([^)]+)\)/g, function (a, op, s1, s2) {
                     return '__s.' + op + '(' + s1 + ',' + s2 + ')'
                 })
-                + "return{out:__out,stack:__s};})";
+                + "return{out:__out,stack:__s,executionTime:(Date.now()-__execution)+' ms'};})";
+        fn = fn.replace(/\);;/g, ");");
+        return {
+            fn: eval(fn),
+            fnPure: fn,
+            compileTime: (Date.now() - start) + " ms"
+        }
     }
 
-    function keepReplaceUntilNoChange (text, regex, fn) {
+    function keepReplaceUntilNoChange(text, regex, fn) {
         var last = text;
         do {
             last = text;
@@ -394,12 +205,8 @@
     var yes = document.getElementById("yes");
 
     yo.onkeyup = function () {
-        var stack = [];
-        var obj = {};
-        var result = calculate(yo.value, stack, obj);
-        if (result != undefined) stack.push(result);
-        yes.value = (obj.timeout ? "TIMEOUT!!!" : "") + (obj.out || result) + (stack.length != 0 ? ('\n\n' + JSON.stringify(stack, 4, '\t')) : '') + (Object.keys(obj.values) != 0 ? ('\n\n' + JSON.stringify(obj.values, 4, '\t')) : '' );
-        yes.value += '\n\nFaster Compiler version:\n' + compileWithHeader(yo.value);
-        yes.value += '\n' + JSON.stringify(eval(compileWithHeader(yo.value))(), 4, '\t');
+        var compiled = compileWithHeader(yo.value);
+        yes.value = 'Faster Compiler version:\n' + JSON.stringify(compiled, 4, '\t');
+        yes.value += '\n' + JSON.stringify(compiled.fn(), 4, '\t');
     };
 </script>

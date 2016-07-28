@@ -8,8 +8,54 @@ Why?
 
 I'm keep asking this question for 10 years..
 
+How?
+-------------
 
-Basics
+Before starting to code, you must learn compiling stuff. If you want to try this out with node.js; type this command to terminal
+
+```
+npm install whiroth --save
+```
+
+```javascript
+var whiroth = require('whiroth'); // es5 syntax
+var myExpression = "1 2 + pv";
+var compile = whiroth(myExpression);
+var result = compile.fn();
+console.log(result.out); // 3
+```
+
+if you enjoy this in browser;
+
+```
+bower install whiroth --save
+```
+
+```javascript
+var myExpression = "1 2 + pv";
+var compile = whiroth(myExpression); // make sure you loaded whiroth.js before this code
+var result = compile.fn();
+console.log(result.out); // 3
+```
+
+Basic Api
+---------------
+
+Whiroth function compiles your expression then return an object that has this properties: "fn", "fnPure", "compileTime". Basically compileTime how much milliseconds passed during the compilation. fnPure is compiled string function with whiroth. fn is fnPure's real version that means unlike fnPure this one can be called. tl;dr fnPure is String, fn is Function
+
+So you want to execute your expression, don't you. call fn with parenthesis. You can give an array to first parameter. Basically this will manipulates stack from beginning. For ex:
+
+```javascript
+var compile = whiroth("+ pv");
+var result = compile.fn([4, 6]);
+console.log(result.out); // 10
+```
+
+As you can see we did not give any number in expression but while we're executing, we give [4, 6] array.
+
+Also execution returns an object too. It gives you "stack", "out", "executionTime". Basically executionTime is stores how long it takes to execute this expression. stack is remaining elements in stack, if you do not use output you can just stack.pop() to get answer. out means stdout. when you call pv and pc operators text data will appended into this stream.
+
+Language Basics
 -------------
 
 Expression evaluator basically works with stack. Last result will be your answer
@@ -90,8 +136,9 @@ Operators
 | continue |         continues for         |                         |
 |    pc    |          prints char          |         remove(1)       |
 |    pv    |          prints value         |         remove(1)       |
+|   swap   |     swaps last two values     |         modify(2)       |
 
-Routine calls
+Native javascript function calls
 -----------------------
 
 | Call type                                   | Syntax         | Stack change | Notes                             |
@@ -133,7 +180,7 @@ use parenthesis for logical things.
 ```
 10 10 == if (
     20
-)
+) else ( )
 ```
 
 result: 20 (because 10 == 10)
@@ -272,13 +319,11 @@ set<a, 10>  ; a = 10
 Output
 ------------------
 
-Whiroth has stdout too but routines won't return output. you have to fetch it from object.
+Whiroth function returns an object. You can fetch out data from it.
 
 ```javascript
-var stack = [];
-var opts = {};
-var result = whiroth(text, stack, opts);
-console.log(opts.out);
+var result = whiroth(text)();
+console.log(result.out);
 ```
 
 How can i use output? easy
