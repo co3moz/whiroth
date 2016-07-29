@@ -1,35 +1,45 @@
 <!--suppress HtmlFormInputWithoutLabel, JSUnusedAssignment, JSCheckFunctionSignatures -->
 <head>
-    <style>
-        body {
-            background-color: black;
-            text-align: center;
-        }
-
-        textarea {
-            width: 49%;
-            height: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="browser.css" type="text/css">
 </head>
 <body>
-<textarea id="inputTextArea">
-    5 (10 pc)
-    "Hello World!" (pc) 10 pc
-    "This is an awesome language (nope) whiroth" (pc) 10 pc
-    "Type and execute it" (pc) 10 pc
-    5 (10 pc)
-</textarea>
+<table style="width: 100%;" spellcheck="false">
+    <tr style="width: 100%;">
+        <td rowspan="3" style="width: 50%;">
+        <textarea id="inputTextArea">
+"Hello World!" (pc) 10 pc
+"This is an awesome language (nope) whiroth" (pc) 10 pc
+"Type and execute it" (pc) 10 pc
+        </textarea>
+        </td>
+        <td>
+        <textarea id="output">
 
-<textarea id="outputTextArea">
+        </textarea>
+        </td>
+    </tr>
+    <tr style="width: 50%;">
+        <td style="width: 50%;">
+        <textarea id="outputInfo">
 
-</textarea>
+        </textarea>
+        </td>
+    </tr>
+    <tr style="width: 50%;">
+        <td style="width: 50%;">
+        <textarea id="outputPure">
 
+        </textarea>
+        </td>
+    </tr>
+</table>
 <script src="../whiroth.js"></script>
 
 <script>
     var inputTextArea = document.getElementById("inputTextArea");
-    var outputTextArea = document.getElementById("outputTextArea");
+    var output = document.getElementById("output");
+    var outputInfo = document.getElementById("outputInfo");
+    var outputPure = document.getElementById("outputPure");
 
     inputTextArea.onkeyup = function () {
         try {
@@ -37,19 +47,24 @@
             try {
                 var executed = compiled.fn();
 
-                outputTextArea.value = 'result: ' + executed;
-                outputTextArea.value += '\nout: ' + executed.out;
-                outputTextArea.value += '\nstack: ' + executed.stack;
-                outputTextArea.value += '\nexecution time: ' + executed.executionTime;
-                outputTextArea.value += '\ncompile time: ' + compiled.compileTime;
-                outputTextArea.value += '\npure fn: ' + compiled.fnPure;
+                output.style.backgroundColor = "";
+                outputInfo.style.backgroundColor = "";
+                output.value = executed.out ? executed.out : isNaN(executed) ? executed.out : executed;
+                outputInfo.value = 'execution time: ' + executed.executionTime;
+                outputInfo.value += '\ncompile time: ' + compiled.compileTime;
+                outputInfo.value += '\nstack: ' + JSON.stringify(executed.stack, 4, '  ');
+                outputPure.value = compiled.fnPure;
             } catch (e) {
-                outputTextArea.value = 'Execution error! :' + e.message;
-                outputTextArea.value += '\ncompile time: ' + compiled.compileTime;
-                outputTextArea.value += '\npure fn: ' + compiled.fnPure;
+                output.style.backgroundColor = "red";
+                outputInfo.style.backgroundColor = "";
+                output.value = 'Execution error! :' + e.message;
+                outputInfo.value = '\ncompile time: ' + compiled.compileTime;
+                outputPure.value = compiled.fnPure;
             }
         } catch (e) {
-            outputTextArea.value = e.message;
+            output.style.backgroundColor = "";
+            outputInfo.style.backgroundColor = "red";
+            outputInfo.value = e.message;
         }
     };
 

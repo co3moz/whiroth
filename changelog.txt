@@ -1,0 +1,14 @@
+v1.0.1
+	- undefined support
+	- removed variable control (undefined can be added to stack)
+	- test/browser better visuals
+	- better error management
+	- fixed iter / init bug when there is no loop
+	- set_global<> global definition for routines
+	- set<> and set_global<> now has reserved keyword check.
+	- routines now has reserved keyword check
+	- better if else algorithm
+	- header function parameter name changed.
+
+v1.0.0
+	- first release

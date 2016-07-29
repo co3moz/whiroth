@@ -346,7 +346,7 @@ result: `10 + 20 = 30`
 Routines
 --------------------
 
-You can create own routines with `routine name ( code )` syntax. And execute them with `name<>`
+You can create own routines with `routine name ( code )` syntax. And execute them with `name<>`.
 examples:
 
 ```
@@ -375,6 +375,37 @@ stack:
     625
 ]
 ```
+
+> **Note:** Routines removes sets when exit. if you want to global set use `set_global<name>`
+> example:
+> ```
+> routine test (
+>   3 set<a>
+> )
+>
+> routine global_test (
+>   3 set_global<a>
+> )
+>
+> test<> #a ; Execution error! : a is not defined
+> global_test<> #a ; 3
+> ```
+
+
+> **Important!** When you say some set value is global then it starts life as `undefined`
+> example:
+> ```
+> #a ; no error just pushes undefined to stack
+> set_global<a, 10>
+> #a ; 10
+> ```
+> you can check undefined with:
+> ```
+> #a undefined == if ( "yeah it's still undefined" (pc) 10 pc )
+> set_global<a, 10>
+> #a undefined == else ( "now it's not undefined" (pc) )
+> #a
+> ```
 
 Self Calling Routines
 -----------------------
@@ -499,8 +530,6 @@ set <prime, 23>
 #prime  ( init i / : [#floor] - 0 == )
 #prime -- (+) 2 - 0 ==
 if ( "prime" ) else ( "not prime" ) (pc)
-
-clear <prime>
 ```
 
 ### 5 factorial without routines
@@ -515,7 +544,7 @@ clear <prime>
 
 ; or
 
-6 set<f> #f (i) #f -- (*) clear<f> ; uses set. but works always
+6 set<f> #f (i) #f -- (*)  ; uses set. but works always
 
 ; or
 

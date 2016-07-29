@@ -143,6 +143,12 @@ describe('Whiroth', function () {
     it('should be equal', function () {
       should.equal(whiroth('set<a, 10> #a set<b> #a #b == if ( "equal" (pc))')().out.toString(), "equal");
     });
+
+    it('should be throw error', function () {
+      assert.throws(function () {
+        whiroth("set<for>")
+      });
+    });
   });
 
   describe('Routines', function () {
@@ -151,7 +157,9 @@ describe('Whiroth', function () {
     });
 
     it('should be throw error', function () {
-      assert.throws(whiroth("routine add (+) routine add (-) 1 2 add<>"), Error, 'already defined routine add');
+      assert.throws(function () {
+        whiroth("routine add (+) routine add (-) 1 2 add<>")
+      });
     });
 
     it('should be -1', function () {
@@ -180,6 +188,30 @@ describe('Whiroth', function () {
 
     it('should be not prime', function () {
       should.equal(whiroth('set <prime, 24> #prime  ( init i / : [#floor] - 0 == ) #prime -- (+) 2 - 0 == if ( "prime" ) else ( "not prime" ) (pc)')().out.toString(), "not prime");
+    });
+
+    it('should be fibonacci', function () {
+      should.equal(whiroth('20 ("fibonacci(" (pc) i pv ") = " (pc) 1 1 i 2 - ( r u : d + uu)d @ pv)')().out.toString(), "fibonacci(20) = 6765fibonacci(19) = 4181fibonacci(18) = 2584fibonacci(17) = 1597fibonacci(16) = 987fibonacci(15) = 610fibonacci(14) = 377fibonacci(13) = 233fibonacci(12) = 144fibonacci(11) = 89fibonacci(10) = 55fibonacci(9) = 34fibonacci(8) = 21fibonacci(7) = 13fibonacci(6) = 8fibonacci(5) = 5fibonacci(4) = 3fibonacci(3) = 2fibonacci(2) = 1fibonacci(1) = 1");
+    });
+
+    it('should be 720', function () {
+      should.equal(whiroth('6 : (i) d -- (*)')().toString(), "720");
+    });
+
+    it('should be 720', function () {
+      should.equal(whiroth('6 set<f> #f (i) #f -- (*)')().toString(), "720");
+    });
+
+    it('should be 720', function () {
+      should.equal(whiroth('6 (i : 1 == if(init)) -- (*)')().toString(), "720");
+    });
+
+    it('should be 720', function () {
+      should.equal(whiroth('6 (i) 5 (*)')().toString(), "720");
+    });
+
+    it('should be 720', function () {
+      should.equal(whiroth('1 6 (i *)')().toString(), "720");
     });
   });
 });

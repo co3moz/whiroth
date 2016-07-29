@@ -42,6 +42,37 @@
     });
   }
 
+  function isReserved(check) {
+    return (check == '__s'
+    || check == '__r'
+    || check == '__ro'
+    || check == '__execution'
+    || check == '__out'
+    || check == '__a'
+    || check == '__b'
+    || check == '__pc'
+    || check == '__pv'
+    || check == 'for'
+    || check == 'while'
+    || check == 'iter'
+    || check == 'break'
+    || check == 'continue'
+    || check == 'pc'
+    || check == 'pv'
+    || check == 'undefined'
+    || check == 'null'
+    || check == 'else'
+    || check == 'routine'
+    || check == 'set'
+    || check == 'set_global'
+    || check == 'swap'
+    || check == 'true'
+    || check == 'false'
+    || check.indexOf('__i') == 0
+    || check.indexOf('__m') == 0);
+
+  }
+
   function compile(what, obj) {
     (obj || (obj = {}));
 
@@ -49,7 +80,7 @@
     try {
       var ifState = 0;
       what = resolveFor(forPrepare(what));
-      what.replace(/(-?\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b)|(?:#(\w+))|(for|while|if|f|w|else|routine *\w+ *#?)? *(?:\((.*?)\))|(?:(\w+) *< *>)|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|swap|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set *< *(\w+) *(?:, *(\w+))? *>)|(?:clear *< *(\w+) *>)|[ \t\n\r]+|(.)/g, function (all, n, bool, specialOps, def, frm, frd, call, op, isParamSafe, ssop, smop, set, setv, clear, other) {
+      what.replace(/(-?\d+(?:\.\d+)?)|(true|false)|(\biter\b|\bi\b|\binit\b|\bbreak\b|\bcontinue\b|\bpc\b|\bpv\b|\bundefined\b)|(?:#(\w+))|(for|while|if|f|w|else|routine *\w+ *#?)? *(?:\((.*?)\))|(?:(\w+) *< *>)|(\+\+|\+|--|-|\*|\/|\|\||\||\^|%|<<|>>|<|>|==|!=|>=|<=|~|!|:|@|swap|u|d|r)|(?:\[(=)?([^\]]+?)])|(?:\{([^}]+?)})|(?:set(_global)? *< *(\w+) *(?:, *(\w+))? *>)|[ \t\n\r]+|(.)/g, function (all, n, bool, specialOps, def, frm, frd, call, op, isParamSafe, ssop, smop, set_global, set, setv, other) {
         if (op) {
           if (op == ':') {
             compiled += ";__a=__s.pop();";
@@ -88,14 +119,21 @@
         } else if (bool) {
           compiled += '__s.push(' + (bool == "true") + ');';
         } else if (def) {
-          compiled += 'if(typeof ' + def + '!=="undefined")__s.push(' + def + ');';
+          compiled += '__s.push(' + def + ');';
         } else if (specialOps) {
-          if (specialOps == 'iter' || specialOps == 'i') compiled += '__s.push(__i' + obj.picked + ');';
-          else if (specialOps == 'init') compiled += '__s.push(__m' + obj.picked + ');';
+          if (specialOps == 'iter' || specialOps == 'i') {
+            if (obj.picked == undefined) throw Error("There is no loop to use iter");
+            compiled += '__s.push(__i' + obj.picked + ');';
+          }
+          else if (specialOps == 'init') {
+            if (obj.picked == undefined) throw Error("There is no loop to use init");
+            compiled += '__s.push(__m' + obj.picked + ');';
+          }
           else if (specialOps == 'break') compiled += 'break;';
           else if (specialOps == 'continue') compiled += 'continue;';
           else if (specialOps == 'pc') compiled += '__pc();';
           else if (specialOps == 'pv') compiled += '__pv();';
+          else if (specialOps == 'undefined') compiled += '__s.push(undefined);';
         } else if (ssop) {
           if (ssop.indexOf('#') == 0) ssop = "Math." + ssop.substring(1);
 
@@ -113,8 +151,9 @@
           compiled += '__b=__s.pop();';
           compiled += '__a=__s.pop();';
           compiled += '__r=' + smop + '(__a, __b);';
-          compiled += 'if(__r!=void(0))__s.push(+__r);';
+          compiled += '__s.push(+__r);';
         } else if (call) {
+          if (!obj.routines || !obj.routines[call]) throw Error("Routine " + call + " probably never defined before");
           compiled += '__ro["' + call + '"]' + '();';
 
         } else if (frd) {
@@ -123,30 +162,32 @@
             compiled += '__i' + picked + '=__s.pop();';
             compiled += '__m' + picked + '=__i' + picked + ';';
             compiled += 'for(;__i' + picked + '>0;__i' + picked + '--){';
-            compiled += compile(frd, {picked: picked});
+            compiled += compile(frd, {picked: picked, routines: obj.routines, globals: obj.globals});
             compiled += '};';
           } else if (frm == 'for' || frm == 'f') {
             compiled += '__i' + picked + '=1;';
             compiled += '__m' + picked + '=__s.pop();';
             compiled += 'for(;__i' + picked + '<=__m' + picked + ';__i' + picked + '++){';
-            compiled += compile(frd, {picked: picked});
+            compiled += compile(frd, {picked: picked, routines: obj.routines, globals: obj.globals});
             compiled += '};';
           } else if (frm == 'if') {
-            compiled += '__i' + picked + '=__s.pop();';
-            compiled += '__m' + picked + (obj.picked > 1 ? '=__m' + obj.picked : '=__i1') + ';';
-            compiled += 'if(__i' + picked + ') {';
-            compiled += compile(frd, {picked: picked});
+            compiled += '__r' + picked + '=__s.pop();';
+            if (obj.picked) compiled += '__i' + picked + '=__i' + obj.picked + ';';
+            if (obj.picked) compiled += '__m' + picked + '=__m' + obj.picked + ';';
+            compiled += 'if(__r' + picked + ') {';
+            compiled += compile(frd, {picked: picked, routines: obj.routines, globals: obj.globals});
             compiled += '};';
             ifState = picked;
           } else if (frm == 'else') {
             if (ifState != 0) {
               picked = ifState;
             } else {
-              compiled += '__i' + picked + '=__s.pop();';
+              compiled += '__r' + picked + '=__s.pop();';
             }
-            compiled += '__m' + picked + (obj.picked > 1 ? '=__m' + obj.picked : '=__i1') + ';';
-            compiled += 'if(!__i' + picked + '){';
-            compiled += compile(frd, {picked: picked});
+            if (obj.picked) compiled += '__i' + picked + '=__i' + obj.picked + ';';
+            if (obj.picked) compiled += '__m' + picked + '=__m' + obj.picked + ';';
+            compiled += 'if(!__r' + picked + '){';
+            compiled += compile(frd, {picked: picked, routines: obj.routines, globals: obj.globals});
             compiled += '};';
           } else if (frm.indexOf('routine') == 0) {
             var reg = /routine *(\w+) *(#)?/.exec(frm);
@@ -154,29 +195,53 @@
             var ovr = reg[2];
 
             if (!ovr) {
-              compiled += 'if(__ro["' + name + '"])throw Error("already defined routine ' + name + '");';
+              if (obj.routines[name]) throw Error("Already defined routine " + name);
             }
 
+            if (isReserved(name)) throw Error("You cannot use this '" + set + "' with routines. it is reserved!");
+
+            obj.routines[name] = true;
             compiled += '__ro["' + name + '"]=function(){';
-            compiled += compile(frd);
+            compiled += compile(frd, {routines: obj.routines, globals: obj.globals});
             compiled += '};';
           }
         } else if (set) {
-          if (setv) {
-            compiled += 'var ' + set + '=' + (+setv) + ';';
+          if (isReserved(set)) throw Error("You cannot use this '" + set + "' with sets. it is reserved!");
+          if (set_global) {
+            obj.globals[set] = true;
+            if (setv) {
+              compiled += set + '=' + (+setv) + ';';
+            } else {
+              compiled += set + '=__s.pop();'
+            }
           } else {
-            compiled += 'var ' + set + '=__s.pop();'
+            if (setv) {
+              compiled += 'var ' + set + '=' + (+setv) + ';';
+            } else {
+              compiled += 'var ' + set + '=__s.pop();'
+            }
           }
-        } else if (clear) {
-          compiled += 'delete ' + clear + ';';
         } else if (other) {
           throw Error("unexpected statement " + other);
         } else if (n) {
           compiled += '__s.push(' + (+n) + ');';
         }
+
         return "";
       });
     } catch (e) {
+      if (e.message.indexOf("unexpected statement") == 0) {
+        var char = e.message.substring("unexpected statement ".length);
+        if (char == '(') {
+          throw Error("Compile error: '(' some loop paranthesis never closed!");
+        } else if (char == '{') {
+          throw Error("Compile error: '{' some double parameter native function call paranthesis never closed!");
+        } else if (char == '[') {
+          throw Error("Compile error: '[' some single parameter native function call paranthesis never closed!");
+        } else if (char == '#') {
+          throw Error("Compile error: '#' routine call without a valid name!");
+        }
+      }
       throw Error(e.message.indexOf("Compile error: ") == 0 ? e.message : "Compile error: " + e.message);
     }
 
@@ -185,11 +250,17 @@
 
   function compileWithHeader(what) {
     var start = Date.now();
-    var fn = "(function(a) {var __s=[],__r,__ro={},__execution=Date.now(),__out='',__a,__b,__r,__pc=(function(){__out+=String.fromCharCode(__s.pop())}),__pv=(function(){__out+=__s.pop()});if(a&&a.constructor==Array)__s.push.apply(__s, a);"
-      + keepReplaceUntilNoChange(compile(what), /__s\.(push|pop)\(([^)]+)\) *; *__s\.\1\(([^)]+)\)/g, function (a, op, s1, s2) {
-        return '__s.' + op + '(' + s1 + ',' + s2 + ')'
-      })
-      + ";__r=new Number(__s[__s.length-1]);__r.out=__out;__r.stack=__s;__r.executionTime=(Date.now()-__execution)+' ms';return __r})";
+    var obj = {
+      routines: {},
+      globals: {}
+    };
+
+    var optimizedCompile = keepReplaceUntilNoChange(compile(what, obj), /__s\.(push|pop)\(([^)]+)\) *; *__s\.\1\(([^)]+)\)/g, function (a, op, s1, s2) {
+      return '__s.' + op + '(' + s1 + ',' + s2 + ')'
+    });
+
+    var fn = "(function(__param){var __s=[],__ro={},__execution=Date.now()" + (Object.keys(obj.globals).length > 0 ? ',' + Object.keys(obj.globals).join(',') : '') + ",__out='',__a,__b,__r,__pc=(function(){__out+=String.fromCharCode(__s.pop())}),__pv=(function(){__out+=__s.pop()});if(__param&&__param.constructor==Array)__s.push.apply(__s,__param);"
+      + optimizedCompile + ";__r=new Number(__s[__s.length-1]);__r.out=__out;__r.stack=__s;__r.executionTime=(Date.now()-__execution)+' ms';return __r})";
     fn = fn.replace(/(\)|}|]);+/g, "$1;");
     var fnE = eval(fn);
     fnE.fn = fnE;
